@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学2年生向け 英語文法あそび v12.6</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. React ライブラリ -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- 3. Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Google Fonts & Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+        body { font-family: 'M PLUS Rounded 1c', sans-serif; user-select: none; }
+        
+        .bg-pattern {
+            background-color: #f0f9ff;
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Animations */
+        @keyframes pop-in { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+        @keyframes bounce-gentle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .animate-bounce-gentle { animation: bounce-gentle 2s infinite; }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        .animate-shake { animation: shake 0.5s infinite; }
+        @keyframes shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .bg-shine { background-size: 200% 200%; animation: shine 3s linear infinite; }
+
+        .confetti { position: fixed; width: 12px; height: 12px; animation: fall linear forwards; z-index: 100; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }
+        
+        .card-glow { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 215, 0, 0.6); }
+        .combo-text { text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.2); }
+        
+        /* Ruby text adjustments */
+        rt { user-select: none; font-size: 0.6em; color: #64748b; }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Star Styling */
+        .star-active { filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.8)); transform: scale(1.1); }
+
+        /* --- Card Styles --- */
+        @keyframes holo { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .card-ssr { background: linear-gradient(135deg, #fce7f3, #e9d5ff, #c4b5fd, #a5f3fc, #fce7f3); background-size: 300% 300%; animation: holo 4s ease infinite; border: 2px solid #fff; box-shadow: 0 0 15px rgba(167, 139, 250, 0.5); }
+        @keyframes cosmos { 0% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } 100% { background-position: 0% 0%; } }
+        .card-l { background: radial-gradient(circle at center, #4c1d95, #1e1b4b, #000000); background-size: 200% 200%; animation: cosmos 8s ease infinite; border: 2px solid #818cf8; box-shadow: 0 0 20px rgba(79, 70, 229, 0.8); color: white; }
+        .card-l .emoji-display { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)); }
+    </style>
+</head>
+<body class="bg-pattern text-slate-800">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+const { useEffect, useMemo, useRef, useState, useCallback } = React;
+
+// --- Components ---
+function F({ rb, rt }) {
+  return (<ruby className="[ruby-position:over]"><span>{rb}</span><rt>{rt}</rt></ruby>);
+}
+
+const T = ({ t }) => {
+    // 漢字とフリガナのマッピング
+    const map = {
+        "勉強": <F rb="勉強" rt="べんきょう" />, "質問": <F rb="質問" rt="しつもん" />, "正解": <F rb="正解" rt="せいかい" />,
+        "問題": <F rb="問題" rt="もんだい" />, "単語": <F rb="単語" rt="たんご" />, "並": <F rb="並" rt="なら" />,
+        "替": <F rb="か" />, "選": <F rb="選" rt="えら" />, "全問": <F rb="全問" rt="ぜんもん" />,
+        "記録": <F rb="記録" rt="きろく" />, "最高": <F rb="最高" rt="さいこう" />, "点": <F rb="点" rt="てん" />,
+        "回": <F rb="回" rt="かい" />, "保存": <F rb="保存" rt="ほぞん" />, "読": <F rb="読" rt="よ" />, "込": <F rb="込" rt="こ" />,
+        "今日": <F rb="今日" rt="きょう" />, "合計": <F rb="合計" rt="ごうけい" />, "昨夜": <F rb="昨夜" rt="さくや" />,
+        "昨日": <F rb="昨日" rt="きのう" />, "私": <F rb="私" rt="わたし" />, 
+        "誰": <F rb="誰" rt="だれ" />, "昼": <F rb="昼" rt="ひる" />,
+        "飯": <F rb="飯" rt="はん" />, "動詞": <F rb="動詞" rt="どうし" />, "現在": <F rb="現在" rt="げんざい" />,
+        "過去": <F rb="過去" rt="かこ" />, "助動詞": <F rb="助動詞" rt="じょどうし" />, "疑問詞": <F rb="疑問詞" rt="ぎもんし" />,
+        "疑問": <F rb="疑問" rt="ぎもん" />, 
+        "前置詞": <F rb="前置詞" rt="ぜんちし" />, "場所": <F rb="場所" rt="ばしょ" />, "難易度": <F rb="難易度" rt="なんいど" />,
+        "穴埋": <F rb="穴埋" rt="あなう" />, "並べ替": <F rb="並べ替" rt="ならべか" />,
+        "複": <F rb="複" rt="ふく" />, "数": <F rb="すう" />, "進行形": <F rb="進行形" rt="しんこうけい" />,
+        "代名詞": <F rb="代名詞" rt="だいめいし" />, "規則": <F rb="規則" rt="きそく" />, "不規則": <F rb="不規則" rt="ふきそく" />,
+        "活用": <F rb="活用" rt="かつよう" />, "表": <F rb="表" rt="ひょう" />, "主語": <F rb="主語" rt="しゅご" />,
+        "形": <F rb="形" rt="かたち" />, "習慣": <F rb="習慣" rt="しゅうかん" />, "状態": <F rb="状態" rt="じょうたい" />,
+        "以外": <F rb="以外" rt="いがい" />, "特別": <F rb="特別" rt="とくべつ" />, "変": <F rb="変" rt="か" />,
+        "覚": <F rb="覚" rt="おぼ" />, "意味": <F rb="意味" rt="いみ" />, "足": <F rb="足" rt="た" />,
+        "置": <F rb="置" rt="お" />, "元": <F rb="元" rt="もと" />, "最初": <F rb="最初" rt="さいしょ" />,
+        "言葉": <F rb="言葉" rt="ことば" />, "否定": <F rb="否定" rt="ひてい" />, "構文": <F rb="構文" rt="こうぶん" />,
+        "獲得": <F rb="獲得" rt="かくとく" />, "単": <F rb="単" rt="たん" />, "例": <F rb="例" rt="れい" />,
+        "別": <F rb="別" rt="べつ" />, "机": <F rb="机" rt="つくえ" />
+    };
+    let parts = [t];
+    Object.keys(map).forEach(key => {
+        const newParts = [];
+        parts.forEach(part => {
+            if (typeof part === 'string') {
+                const split = part.split(key);
+                split.forEach((s, i) => { if (s) newParts.push(s); if (i < split.length - 1) newParts.push(map[key]); });
+            } else { newParts.push(part); }
+        });
+        parts = newParts;
+    });
+    return <span>{parts.map((p, i) => <React.Fragment key={i}>{p}</React.Fragment>)}</span>;
+};
+
+const speakEn = (text) => {
+  try {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.85; 
+    window.speechSynthesis.speak(u);
+  } catch {}
+};
+
+const getTodayString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// --- Config ---
+const LS_KEY = "eigoAppS2_v12_6";
+const QUESTIONS_PER_SET = 10;
+const MAX_STARS = 3;
+const GACHA_COST = 200;
+
+// --- Data: Hint Tables ---
+const HINT_TABLES = {
+    "hint_be": {
+        title: "Be動詞のルール",
+        content: (
+            <div className="text-base space-y-4">
+                <div className="bg-pink-50 p-3 rounded-xl border border-pink-100">
+                    <h4 className="font-bold text-pink-700 mb-2 border-b border-pink-200 pb-1"><T t="現在形 (今の話)"/></h4>
+                    <ul className="space-y-2">
+                        <li><span className="text-xl font-bold mr-2">am</span> : <T t="主語"/>が <b>I</b> (わたし)</li>
+                        <li><span className="text-xl font-bold mr-2">is</span> : <T t="主語"/>が <b>ひとり</b> (He, She, This...)</li>
+                        <li><span className="text-xl font-bold mr-2">are</span> : <T t="主語"/>が <b>You</b> か <b>たくさん</b></li>
+                    </ul>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <h4 className="font-bold text-blue-700 mb-2 border-b border-blue-200 pb-1"><T t="過去形 (昔の話)"/></h4>
+                    <ul className="space-y-2">
+                        <li><span className="text-xl font-bold mr-2">was</span> : am と is の<T t="過去"/> (I, He, She...)</li>
+                        <li><span className="text-xl font-bold mr-2">were</span> : are の<T t="過去"/> (You, We, They...)</li>
+                    </ul>
+                </div>
+            </div>
+        )
+    },
+    "hint_verb_present": {
+        title: "一般動詞・現在形",
+        content: (
+            <div className="text-base space-y-3 bg-sky-50 p-4 rounded-xl border border-sky-100">
+                <p><T t="習慣"/>や、今の<T t="状態"/>をいうとき。</p>
+                <div className="border-t border-sky-200 my-1"></div>
+                <h4 className="font-bold text-sky-800 text-lg">★ 3<T t="単"/>現(さんたんげん)の S</h4>
+                <p><T t="主語"/>が <b>I, You <T t="以外"/>のひとり</b> (He, She, Taro, Dogなど) のとき、<T t="動詞"/>に <b>s</b> か <b>es</b> をつけます。</p>
+                <div className="grid grid-cols-2 gap-2 mt-2 font-bold text-center text-lg">
+                    <div className="bg-white rounded p-1 shadow-sm">play → play<span className="text-red-500">s</span></div>
+                    <div className="bg-white rounded p-1 shadow-sm">go → go<span className="text-red-500">es</span></div>
+                    <div className="bg-white rounded p-1 shadow-sm">watch → watch<span className="text-red-500">es</span></div>
+                    <div className="bg-white rounded p-1 shadow-sm">study → stud<span className="text-red-500">ies</span></div>
+                </div>
+            </div>
+        )
+    },
+    "hint_verb_past": {
+        title: "一般動詞・過去形",
+        content: (
+            <div className="text-base space-y-3 bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <p>終わったこと、昔のことをいうとき。</p>
+                <div className="border-t border-orange-200 my-1"></div>
+                <h4 className="font-bold text-orange-800 text-lg">★ ed をつける</h4>
+                <p>多くの<T t="動詞"/>は、後ろに <b>ed</b> をつけるだけで<T t="過去形"/>になります。</p>
+                <div className="mt-2 font-bold text-center bg-white rounded p-2 text-lg shadow-sm">
+                    play → play<span className="text-red-500">ed</span><br/>
+                    watch → watch<span className="text-red-500">ed</span><br/>
+                    cook → cook<span className="text-red-500">ed</span>
+                </div>
+                <p className="text-xs text-right mt-1 text-slate-500">※<T t="不規則動詞"/>は<T t="別"/>のリストを見てね</p>
+            </div>
+        )
+    },
+    "hint_verb_irregular": {
+        title: "不規則動詞リスト",
+        content: (
+            <div className="text-base">
+                <p className="mb-2"><T t="形"/>が<T t="特別"/>に<T t="変"/>わる<T t="動詞"/>です。<T t="覚"/>えちゃおう！</p>
+                <div className="grid grid-cols-2 gap-2 text-center font-bold">
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">go → <span className="text-rose-600 text-lg">went</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">come → <span className="text-rose-600 text-lg">came</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">eat → <span className="text-rose-600 text-lg">ate</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">have → <span className="text-rose-600 text-lg">had</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">see → <span className="text-rose-600 text-lg">saw</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">buy → <span className="text-rose-600 text-lg">bought</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">do → <span className="text-rose-600 text-lg">did</span></div>
+                    <div className="bg-rose-50 p-2 rounded border border-rose-100 shadow-sm">make → <span className="text-rose-600 text-lg">made</span></div>
+                </div>
+            </div>
+        )
+    },
+    "hint_can": {
+        title: "助動詞 (Canなど)",
+        content: (
+            <div className="text-base bg-green-50 p-4 rounded-xl space-y-3 border border-green-100">
+                <p><T t="動詞"/>の前に<T t="置"/>いて、<T t="意味"/>を<T t="足"/>します。</p>
+                <ul className="list-disc list-inside font-bold space-y-1 text-lg">
+                    <li><span className="text-green-700">Can</span> : 〜できる</li>
+                    <li><span className="text-green-700">May</span> : 〜してもよい</li>
+                    <li><span className="text-green-700">Must</span> : 〜しなければならない</li>
+                </ul>
+                <div className="bg-white p-3 rounded-lg border border-green-200 text-sm mt-2 shadow-sm">
+                    <b className="text-green-800">だいじなルール:</b><br/>
+                    1. <T t="動詞"/>は<T t="元"/>の<T t="形"/>にする (sはつけない！)<br/>
+                    2. <T t="質問"/>は <b>Can you...?</b> のように前に出す
+                </div>
+            </div>
+        )
+    },
+    "hint_wh": {
+        title: "疑問詞 (Wh-)",
+        content: (
+            <div className="text-base bg-violet-50 p-4 rounded-xl border border-violet-100">
+                <p className="mb-2"><T t="質問"/>の<T t="最初"/>に<T t="置"/>く<T t="言葉"/>です。</p>
+                <div className="grid grid-cols-2 gap-3 font-bold">
+                    <div className="bg-white p-2 rounded shadow-sm">What <span className="text-xs font-normal block text-gray-500">なに</span></div>
+                    <div className="bg-white p-2 rounded shadow-sm">Who <span className="text-xs font-normal block text-gray-500">だれ</span></div>
+                    <div className="bg-white p-2 rounded shadow-sm">Where <span className="text-xs font-normal block text-gray-500">どこ</span></div>
+                    <div className="bg-white p-2 rounded shadow-sm">When <span className="text-xs font-normal block text-gray-500">いつ</span></div>
+                    <div className="bg-white p-2 rounded shadow-sm">How <span className="text-xs font-normal block text-gray-500">どう / どのくらい</span></div>
+                    <div className="bg-white p-2 rounded shadow-sm">Why <span className="text-xs font-normal block text-gray-500">なぜ</span></div>
+                </div>
+                <div className="mt-3 text-sm bg-violet-100 p-2 rounded">
+                    <b>How many</b> : いくつ (<T t="数"/>を聞くとき)
+                </div>
+            </div>
+        )
+    },
+    "hint_preposition": {
+        title: "前置詞 (場所)",
+        content: (
+            <div className="text-base bg-amber-50 p-4 rounded-xl border border-amber-100">
+                <p className="mb-3">モノがどこにあるかを表します。</p>
+                <div className="grid grid-cols-2 gap-3 text-center font-bold">
+                    <div className="bg-white p-2 rounded shadow-sm">
+                        <span className="text-amber-600 text-xl block">on</span>
+                        <span className="text-sm">〜の上に</span>
+                        <span className="text-xs block text-gray-400">📦の上に🍎</span>
+                    </div>
+                    <div className="bg-white p-2 rounded shadow-sm">
+                        <span className="text-amber-600 text-xl block">in</span>
+                        <span className="text-sm">〜の中に</span>
+                        <span className="text-xs block text-gray-400">📦の中に🍎</span>
+                    </div>
+                    <div className="bg-white p-2 rounded shadow-sm">
+                        <span className="text-amber-600 text-xl block">under</span>
+                        <span className="text-sm">〜の下に</span>
+                        <span className="text-xs block text-gray-400">📦の下に🍎</span>
+                    </div>
+                    <div className="bg-white p-2 rounded shadow-sm">
+                        <span className="text-amber-600 text-xl block">by</span>
+                        <span className="text-sm">〜のそばに</span>
+                        <span className="text-xs block text-gray-400">📦の横に🍎</span>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+    "hint_progressive": {
+        title: "進行形 (〜している)",
+        content: (
+            <div className="text-base bg-teal-50 p-4 rounded-xl border border-teal-100 space-y-3">
+                <p>「今、〜しています」というときはこれ！</p>
+                <div className="text-center bg-white p-3 rounded-lg shadow-sm border border-teal-200">
+                    <span className="text-xl font-bold text-pink-500">Be動詞</span>
+                    <span className="mx-2 text-gray-400">+</span>
+                    <span className="text-xl font-bold text-teal-600">ing</span>
+                </div>
+                <ul className="list-disc list-inside text-sm space-y-1 ml-2">
+                    <li>I <b className="text-pink-500">am</b> play<b className="text-teal-600">ing</b>.</li>
+                    <li>He <b className="text-pink-500">is</b> eat<b className="text-teal-600">ing</b>.</li>
+                    <li>They <b className="text-pink-500">are</b> runn<b className="text-teal-600">ing</b>.</li>
+                </ul>
+            </div>
+        )
+    },
+    "hint_plural": {
+        title: "複数形 (2つ以上)",
+        content: (
+            <div className="text-base bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                <p>モノが2つ<T t="以上"/>あるときは、名前の後ろに <b>s</b> か <b>es</b> をつけます。</p>
+                <div className="mt-3 grid grid-cols-1 gap-2 font-bold">
+                    <div className="bg-white px-3 py-1 rounded flex justify-between"><span>apple (1つ)</span> <span>→</span> <span className="text-indigo-600">apples</span></div>
+                    <div className="bg-white px-3 py-1 rounded flex justify-between"><span>box (箱)</span> <span>→</span> <span className="text-indigo-600">boxes</span></div>
+                    <div className="bg-white px-3 py-1 rounded flex justify-between"><span>child (子供)</span> <span>→</span> <span className="text-indigo-600">children</span> <span className="text-[10px] text-red-400">(とくべつ)</span></div>
+                </div>
+            </div>
+        )
+    },
+    "hint_there": {
+        title: "There is 構文",
+        content: (
+            <div className="text-base bg-lime-50 p-4 rounded-xl border border-lime-100 space-y-2">
+                <p>「〜があります / います」という文です。</p>
+                <ul className="space-y-2">
+                    <li className="bg-white p-2 rounded shadow-sm">
+                        <b>There is ...</b><br/>
+                        <span className="text-sm">1つのものがあるとき</span>
+                    </li>
+                    <li className="bg-white p-2 rounded shadow-sm">
+                        <b>There are ...</b><br/>
+                        <span className="text-sm">2つ<T t="以上"/>のものがあるとき</span>
+                    </li>
+                </ul>
+                <p className="text-sm mt-2">
+                    <span className="bg-red-100 px-1 rounded"><T t="否定"/></span> There is <b>not</b>... (ありません)<br/>
+                    <span className="bg-blue-100 px-1 rounded"><T t="疑問"/></span> <b>Is</b> there...? (ありますか？)
+                </p>
+            </div>
+        )
+    },
+    "hint_demo": {
+        title: "これ / あれ",
+        content: (
+            <div className="text-base bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <div className="text-sm text-gray-500 mb-1">近く (これ)</div>
+                        <div className="bg-white p-2 rounded font-bold text-lg mb-2 shadow-sm text-yellow-700">This</div>
+                        <div className="text-xs"><T t="複"/>数は <b className="text-yellow-700 text-sm">These</b></div>
+                    </div>
+                    <div>
+                        <div className="text-sm text-gray-500 mb-1">遠く (あれ)</div>
+                        <div className="bg-white p-2 rounded font-bold text-lg mb-2 shadow-sm text-yellow-700">That</div>
+                        <div className="text-xs"><T t="複"/>数は <b className="text-yellow-700 text-sm">Those</b></div>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+};
+
+// --- Generators ---
+const ALL_SUBJECTS = ["I", "You", "He", "She", "We", "They", "Taro", "Hanako", "Ken", "My father", "My mother", "The dog", "The cat", "Mr. Suzuki"];
+const SINGULAR_SUBJECTS = ["He", "She", "Taro", "Hanako", "Ken", "My father", "My mother", "The dog", "The cat", "Mr. Suzuki"];
+const BE_Q_SUBJECTS = ["I", "you", "he", "she", "we", "they", "Taro", "Hanako", "Ken", "your father", "your mother"];
+
+const getJPSubj = (s) => {
+    const map = {
+        "I": "私", "You": "あなた", "He": "彼", "She": "彼女", "We": "私たち", "They": "彼ら",
+        "Taro": "タロウくん", "Hanako": "ハナコさん", "Ken": "ケンくん", "My father": "私のお父さん", "My mother": "私のお母さん",
+        "The dog": "その犬", "The cat": "その猫", "Mr. Suzuki": "スズキ先生",
+        "your father": "あなたのお父さん", "your mother": "あなたのお母さん"
+    };
+    return map[s] ? map[s] + "は" : s + "は";
+};
+const jpPlaceNi = (p) => {
+    const map = { "at home":"家に", "at school":"学校に", "in the park":"公園に", "at the library":"図書館に", "in the kitchen":"台所に", "in the garden":"庭に", "in my room":"私の部屋に" };
+    return map[p] || p;
+};
+const jpTime = (t) => ({ "yesterday": "昨日", "last night": "昨夜", "this morning": "今朝", "on Sunday": "日曜日に" }[t] || t);
+
+const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = (arr) => arr.slice().sort(() => Math.random() - 0.5);
+const ensureFourChoices = (arr) => {
+    let choices = Array.from(new Set(arr));
+    const correct = choices[0];
+    let others = choices.slice(1);
+    if (choices.length < 4) return shuffle(choices);
+    if (others.length >= 3) others = shuffle(others).slice(0, 3);
+    return shuffle([correct, ...others]);
+};
+
+const genBeVerbPresent = () => { const subj = rand(ALL_SUBJECTS); const place = rand(["at home", "at school", "in the park", "in the kitchen"]); const correct = subj === "I" ? "am" : SINGULAR_SUBJECTS.includes(subj) ? "is" : "are"; return { type: "choice", en: `${subj} ___ ${place}.`, choices: ["am", "is", "are", "was"], correctAnswerText: correct, explainJP: "I→am, He/She→is, You/We/They→are です。", speak: `${subj} ${correct} ${place}.`, jp: `${getJPSubj(subj)} ${jpPlaceNi(place)} います。` }; };
+const genBeVerbPast = () => { const subj = rand(ALL_SUBJECTS); const t = rand(["yesterday", "last night"]); const correct = (subj === "I" || SINGULAR_SUBJECTS.includes(subj)) ? "was" : "were"; return { type: "choice", en: `${subj} ___ happy ${t}.`, choices: ["was", "were", "am", "is"], correctAnswerText: correct, explainJP: "過去のことは was か were を使います。", speak: `${subj} ${correct} happy ${t}.`, jp: `${getJPSubj(subj)} ${jpTime(t)} 幸せでした。` }; };
+const genBeQuestion = () => { const subj = rand(BE_Q_SUBJECTS); const place = rand(["at home", "at school", "in the park"]); const correct = subj === "I" ? "Am" : (["he", "she", "Taro", "Hanako", "Ken"].includes(subj) || subj.includes("father") || subj.includes("mother")) ? "Is" : "Are"; return { type: "choice", en: `___ ${subj} ${place}?`, choices: ["Am", "Is", "Are"], correctAnswerText: correct, explainJP: "質問は Am/Is/Are で始めます。", speak: `${correct} ${subj} ${place}?`, jp: `${getJPSubj(subj)} ${jpPlaceNi(place)} いますか？` }; };
+const genBeMaster = () => rand([genBeVerbPresent, genBeVerbPast, genBeQuestion])();
+const PRESENT_PAIRS = [ { v: "play", tail: "soccer", jp: "サッカーをします" }, { v: "watch", tail: "TV", jp: "テレビをみます" }, { v: "eat", tail: "lunch", jp: "お昼ご飯を食べます" }, { v: "study", tail: "English", jp: "英語を勉強します" }, { v: "run", tail: "fast", jp: "速く走ります" }, { v: "cook", tail: "dinner", jp:"夕食を作ります" } ];
+const genVerbPresent = () => { const subj = rand(ALL_SUBJECTS); const pair = rand(PRESENT_PAIRS); const isSanTanGen = SINGULAR_SUBJECTS.includes(subj); const correct = isSanTanGen ? (pair.v.endsWith('ch')||pair.v.endsWith('o')?pair.v+"es":pair.v+"s") : pair.v; const wrong = isSanTanGen ? pair.v : (pair.v.endsWith('ch')||pair.v.endsWith('o')?pair.v+"es":pair.v+"s"); return { type: "choice", en: `${subj} ___ ${pair.tail}.`, choices: [correct, wrong, pair.v+"ed", pair.v+"ing"], correctAnswerText: correct, explainJP: "主語が一人(He/She/Taroなど)のときは、動詞に s か es をつけます。", speak: `${subj} ${correct} ${pair.tail}.`, jp: `${getJPSubj(subj)} ${pair.jp}。` }; };
+const genVerbPast = () => { const subj = rand(ALL_SUBJECTS); const t = rand(["yesterday", "last night"]); const REG_PAIRS = [{v:"play",p:"played",jp:"サッカーをしました",t:"soccer"}, {v:"watch",p:"watched",jp:"テレビを見ました",t:"TV"}, {v:"cook",p:"cooked",jp:"夕食を作りました",t:"dinner"}, {v:"wash",p:"washed",jp:"洗いました",t:"the car"}]; const p = rand(REG_PAIRS); return { type: "choice", en: `${subj} ___ ${p.t} ${t}.`, choices: [p.p, p.v, p.v+"s", p.v+"ing"], correctAnswerText: p.p, explainJP: "過去のことは、動詞にedをつけます。", speak: `${subj} ${p.p} ${p.t} ${t}.`, jp: `${getJPSubj(subj)} ${jpTime(t)} ${p.jp}。` }; };
+const genVerbIrregular = () => { const subj = rand(ALL_SUBJECTS); const t = rand(["yesterday", "last night"]); const IRR_PAIRS = [ {base:"go",past:"went",tail:"to school",jp:"学校へ行きました"}, {base:"eat",past:"ate",tail:"lunch",jp:"お昼を食べました"}, {base:"see",past:"saw",tail:"a bird",jp:"鳥を見ました"}, {base:"come",past:"came",tail:"home",jp:"家に帰ってきました"}, {base:"have",past:"had",tail:"a good time",jp:"楽しく過ごしました"}, {base:"buy",past:"bought",tail:"a book",jp:"本を買いました"} ]; const v = rand(IRR_PAIRS); return { type: "choice", en: `${subj} ___ ${v.tail} ${t}.`, choices: [v.past, v.base+"ed", v.base, "goes"], correctAnswerText: v.past, explainJP: "不規則動詞は形が特別に変わります。", speak: `${subj} ${v.past} ${v.tail} ${t}.`, jp: `${getJPSubj(subj)} ${jpTime(t)} ${v.jp}。` }; };
+const genVerbQuestion = () => { const subj = rand(["you", "he", "she", "Taro"]); const pair = rand(PRESENT_PAIRS); const correct = (["he","she","taro"].includes(subj.toLowerCase())) ? "Does" : "Do"; return { type: "choice", en: `___ ${subj} ${pair.v} ${pair.tail}?`, choices: ["Do", "Does", "Did", "Is"], correctAnswerText: correct, explainJP: "He/SheなどはDoes、それ以外はDoを使います。", speak: `${correct} ${subj} ${pair.v} ${pair.tail}?`, jp: `${getJPSubj(subj)} ${pair.jp}か？` }; };
+const genDidQuestion = () => { const subj = rand(["you", "he", "she"]); const t = rand(["yesterday", "last night"]); const v = rand(PRESENT_PAIRS); return { type: "choice", en: `Did ${subj} ___ ${v.tail} ${t}?`, choices: [v.v, v.v+"ed", "went", "ate"], correctAnswerText: v.v, explainJP: "Didを使った質問文では、動詞は元の形に戻ります。", speak: `Did ${subj} ${v.v} ${v.tail} ${t}?`, jp: `${getJPSubj(subj)} ${jpTime(t)} ${v.jp}か？` }; };
+const genVerbMaster = () => rand([genVerbPresent, genVerbPast, genVerbIrregular, genVerbQuestion, genDidQuestion])();
+const genCan = () => { const subj = rand(ALL_SUBJECTS); const act = rand([{en:"swim",jp:"泳げる"},{en:"run fast",jp:"速く走れる"},{en:"speak English",jp:"英語を話せる"}]); return { type: "choice", en: `${subj} ___ ${act.en}.`, choices: ["can", "is", "do", "cans"], correctAnswerText: "can", explainJP: "「〜できる」は can を使います。sはつきません。", speak: `${subj} can ${act.en}.`, jp: `${getJPSubj(subj)} ${act.jp}。` }; };
+const genAuxMix = () => { const pool = [ { en: "I ___ swim.", ans: "can", jp: "私は泳げます。", choices: ["can", "may", "must", "is"] }, { en: "You ___ study hard.", ans: "must", jp: "あなたは一生懸命勉強しなければなりません。", choices: ["must", "may", "can", "am"] }, { en: "___ I come in?", ans: "May", jp: "入ってもいいですか？", choices: ["May", "Must", "Am", "Do"] }, { en: "He ___ run fast.", ans: "can", jp: "彼は速く走れます。", choices: ["can", "must", "may", "is"] } ]; const q = rand(pool); return { type: "choice", en: q.en, choices: shuffle(q.choices), correctAnswerText: q.ans, explainJP: "Can(できる), Must(しなければならない), May(してもよい) を使い分けよう。", speak: q.en.replace('___', q.ans), jp: q.jp }; };
+const genWh = () => { const q = rand([ {wh:"What",tail:"is this?",jp:"これは何ですか？"}, {wh:"Who",tail:"is he?",jp:"彼はだれですか？"}, {wh:"Where",tail:"is my book?",jp:"私の本はどこ？"}, {wh:"When",tail:"is your birthday?",jp:"誕生日はいつ？"}, {wh:"How",tail:"are you?",jp:"元気ですか？(調子はどう？)"}, {wh:"How",tail:"many apples?",jp:"リンゴはいくつ(何個)？"} ]); return { type: "choice", en: `___ ${q.tail}`, choices: ["What", "Who", "Where", "When", "How"], correctAnswerText: q.wh, explainJP: "What(なに), Who(だれ), Where(どこ), When(いつ), How(どう) を選ぼう。", speak: `${q.wh} ${q.tail}`, jp: `${q.jp}` }; };
+const genPreposition = () => { const s = rand([ {p:"on", en:"on the desk", jp:"机の上に"}, {p:"in", en:"in the box", jp:"箱の中に"}, {p:"under", en:"under the table", jp:"テーブルの下に"}, {p:"by", en:"by the door", jp:"ドアのそばに"} ]); return { type: "choice", en: `The pen is ___ ${s.en.replace(s.p + ' ', '')}.`, choices: ["on", "in", "under", "by"], correctAnswerText: s.p, explainJP: "場所を表す言葉です。", speak: `The pen is ${s.en}.`, jp: `ペンは${s.jp}あります。` }; };
+const genPlural = () => { const n = rand([{s:"apple",p:"apples"},{s:"box",p:"boxes"},{s:"dog",p:"dogs"},{s:"child",p:"children"}]); const num = Math.floor(Math.random()*3)+2; return { type: "choice", en: `I have ${num} ___.`, choices: [n.p, n.s, n.s+"s", n.p+"s"], correctAnswerText: n.p, explainJP: "2つ以上のときは、複数形(sやesがつく形)にします。", speak: `I have ${num} ${n.p}.`, jp: `私は${num}個の${n.s.replace('apple','リンゴ').replace('box','箱').replace('dog','犬').replace('child','子供')}を持っています。` }; };
+const genProgressive = () => { const subj = rand(ALL_SUBJECTS); const act = rand([{ing:"playing",jp:"しています"},{ing:"eating",jp:"食べています"},{ing:"reading",jp:"読んでいます"}]); const be = (subj === "I") ? "am" : (SINGULAR_SUBJECTS.includes(subj) ? "is" : "are"); return { type: "choice", en: `${subj} ${be} ___ now.`, choices: [act.ing, act.ing.replace('ing',''), "play", "eat"], correctAnswerText: act.ing, explainJP: "「今〜しています」は、be動詞 + ing の形です。", speak: `${subj} ${be} ${act.ing} now.`, jp: `${getJPSubj(subj)} 今 〜${act.jp}。` }; };
+const genThere = () => { const type = rand(['aff', 'neg', 'q', 'past']); let en, correct, choices, jp, explain; const isSin = Math.random() < 0.5; const noun = isSin ? "an apple" : "two apples"; if (type === 'q') { correct = isSin ? "Is" : "Are"; en = `___ there ${noun}?`; choices = ["Is", "Are", "Do", "Does"]; jp = `${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}ありますか？`; explain = "質問するときは、Is か Are を前に出します。"; } else if (type === 'neg') { correct = "not"; en = `There is ___ ${noun.replace('two','any')}.`; choices = ["not", "no", "is", "are"]; jp = `${noun.replace('an apple','リンゴが').replace('two apples','リンゴが')}ありません。`; explain = "「ありません」は is not を使います。"; } else if (type === 'past') { correct = isSin ? "was" : "were"; en = `There ___ ${noun} yesterday.`; choices = ["was", "were", "is", "are"]; jp = `昨日、${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}ありました。`; explain = "昔のことは、is→was、are→were に変えます。"; } else { correct = isSin ? "is" : "are"; en = `There ___ ${noun}.`; choices = ["is", "are", "have", "am"]; jp = `${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}あります。`; explain = "1つならis、2つ以上ならareを使います。"; } return { type: "choice", en, choices, correctAnswerText: correct, explainJP: explain, speak: en.replace('___', correct), jp }; };
+const genDemo = () => { const type = rand(['std', 'q', 'adj']); const isPlural = Math.random() < 0.5; const isNear = Math.random() < 0.5; const noun = isPlural ? "books" : "book"; const be = isPlural ? "are" : "is"; let correct, en, choices, jp, explain; if (type === 'adj') { const adj = "red"; correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `___ ${noun} ${be} ${adj}.`; choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}は赤い本です。`; explain = "「赤い本」などの説明がついても、基本は同じです。"; } else if (type === 'q') { correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `${isPlural?'Are':'Is'} ___ your ${noun}?`; choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}はあなたの本ですか？`; explain = "質問文でも、これ(This/These)とあれ(That/Those)の使い分けは同じです。"; } else { correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `___ ${be} a ${noun}.`.replace('a books', 'books'); choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}は本です。`; explain = "これ(This/These) と あれ(That/Those)。数をよく見てね。"; } return { type: "choice", en, choices, correctAnswerText: correct, explainJP: explain, speak: en.replace('___', correct), jp }; };
+
+const LESSON_GROUPS = [
+    { id: "be_group", name: "Be動詞", bg: "bg-pink-50", border: "border-pink-300", text: "text-pink-800", icon: "🌸" },
+    { id: "verb_group", name: "一般動詞", bg: "bg-sky-50", border: "border-sky-300", text: "text-sky-800", icon: "🏃" },
+    { id: "grammar_group", name: "基本の文法", bg: "bg-green-50", border: "border-green-300", text: "text-green-800", icon: "🍀" },
+    { id: "advance_group", name: "レベルアップ", bg: "bg-violet-50", border: "border-violet-300", text: "text-violet-800", icon: "🚀" }
+];
+
+const LESSONS = [
+  { id: "be-present", groupId: "be_group", hintId: "hint_be", name: "Be動詞 (現在)", generator: genBeVerbPresent, icon: "😊" },
+  { id: "be-past", groupId: "be_group", hintId: "hint_be", name: "Be動詞 (過去)", generator: genBeVerbPast, icon: "🕰️" },
+  { id: "be-question", groupId: "be_group", hintId: "hint_be", name: "Be動詞 (疑問)", generator: genBeQuestion, icon: "🤔" },
+  { id: "be-master", groupId: "be_group", hintId: "hint_be", name: "Be動詞 まとめ", generator: genBeMaster, icon: "👑" },
+  { id: "verb-present", groupId: "verb_group", hintId: "hint_verb_present", name: "一般動詞 (現在)", generator: genVerbPresent, icon: "⚽" },
+  { id: "verb-past", groupId: "verb_group", hintId: "hint_verb_past", name: "一般動詞 (過去)", generator: genVerbPast, icon: "🔙" },
+  { id: "verb-irregular", groupId: "verb_group", hintId: "hint_verb_irregular", name: "一般動詞 (不規則)", generator: genVerbIrregular, icon: "🔥" },
+  { id: "verb-question", groupId: "verb_group", hintId: "hint_verb_present", name: "一般動詞 (疑問)", generator: genVerbQuestion, icon: "❓" },
+  { id: "verb-did", groupId: "verb_group", hintId: "hint_verb_past", name: "Didの文", generator: genDidQuestion, icon: "🔙" },
+  { id: "verb-master", groupId: "verb_group", hintId: "hint_verb_present", name: "一般動詞 まとめ", generator: genVerbMaster, icon: "👑" },
+  { id: "can", groupId: "grammar_group", hintId: "hint_can", name: "助動詞 Can", generator: genCan, icon: "💪" },
+  { id: "aux-mix", groupId: "grammar_group", hintId: "hint_can", name: "助動詞 ミックス", generator: genAuxMix, icon: "🦸" },
+  { id: "wh", groupId: "grammar_group", hintId: "hint_wh", name: "疑問詞 (Wh)", generator: genWh, icon: "🕵️" },
+  { id: "preposition", groupId: "grammar_group", hintId: "hint_preposition", name: "前置詞 (場所)", generator: genPreposition, icon: "📦" },
+  { id: "progressive", groupId: "advance_group", hintId: "hint_progressive", name: "進行形 (ing)", generator: genProgressive, icon: "🏃" },
+  { id: "plural", groupId: "advance_group", hintId: "hint_plural", name: "複数形 (s/es)", generator: genPlural, icon: "🍎" },
+  { id: "there", groupId: "advance_group", hintId: "hint_there", name: "There is 構文", generator: genThere, icon: "👉" },
+  { id: "demo", groupId: "advance_group", hintId: "hint_demo", name: "This / These", generator: genDemo, icon: "🖊️" },
+];
+
+const CARDS = [
+  // N (Normal) - 20 kinds
+  { id: "c_ant", name: "あり", emoji: "🐜", rarity: "N" }, { id: "c_bee", name: "はち", emoji: "🐝", rarity: "N" }, { id: "c_cat", name: "ねこ", emoji: "🐱", rarity: "N" }, { id: "c_dog", name: "いぬ", emoji: "🐶", rarity: "N" }, { id: "c_fish", name: "さかな", emoji: "🐟", rarity: "N" }, { id: "c_frog", name: "かえる", emoji: "🐸", rarity: "N" }, { id: "c_chick", name: "ひよこ", emoji: "🐤", rarity: "N" }, { id: "c_pig", name: "ぶた", emoji: "🐷", rarity: "N" }, { id: "c_mouse", name: "ねずみ", emoji: "🐭", rarity: "N" }, { id: "c_flower", name: "はな", emoji: "🌸", rarity: "N" }, { id: "c_tree", name: "き", emoji: "🌳", rarity: "N" }, { id: "c_sun", name: "たいよう", emoji: "☀️", rarity: "N" }, { id: "c_moon", name: "つき", emoji: "🌙", rarity: "N" }, { id: "c_star", name: "ほし", emoji: "⭐", rarity: "N" }, { id: "c_apple", name: "リンゴ", emoji: "🍎", rarity: "N" }, { id: "c_car", name: "くるま", emoji: "🚗", rarity: "N" }, { id: "c_hamster", name: "ハムスター", emoji: "🐹", rarity: "N" }, { id: "c_rabbit", name: "うさぎ", emoji: "🐰", rarity: "N" }, { id: "c_cloud", name: "くも", emoji: "☁️", rarity: "N" }, { id: "c_shell", name: "かいがら", emoji: "🐚", rarity: "N" },
+  // R (Rare) - 20 kinds
+  { id: "c_lion", name: "ライオン", emoji: "🦁", rarity: "R" }, { id: "c_tiger", name: "トラ", emoji: "🐯", rarity: "R" }, { id: "c_bear", name: "クマ", emoji: "🐻", rarity: "R" }, { id: "c_panda", name: "パンダ", emoji: "🐼", rarity: "R" }, { id: "c_fox", name: "キツネ", emoji: "🦊", rarity: "R" }, { id: "c_koala", name: "コアラ", emoji: "🐨", rarity: "R" }, { id: "c_monkey", name: "サル", emoji: "🐵", rarity: "R" }, { id: "c_penguin", name: "ペンギン", emoji: "🐧", rarity: "R" }, { id: "c_owl", name: "フクロウ", emoji: "🦉", rarity: "R" }, { id: "c_cow", name: "ウシ", emoji: "🐮", rarity: "R" }, { id: "c_sheep", name: "ヒツジ", emoji: "🐑", rarity: "R" }, { id: "c_horse", name: "ウマ", emoji: "🐴", rarity: "R" }, { id: "c_squirrel", name: "リス", emoji: "🐿️", rarity: "R" }, { id: "c_raccoon", name: "アライグマ", emoji: "🦝", rarity: "R" }, { id: "c_skunk", name: "スカンク", emoji: "🦨", rarity: "R" }, { id: "c_badger", name: "アナグマ", emoji: "🦡", rarity: "R" }, { id: "c_otter", name: "カワウソ", emoji: "🦦", rarity: "R" }, { id: "c_beaver", name: "ビーバー", emoji: "🦫", rarity: "R" }, { id: "c_duck", name: "アヒル", emoji: "🦆", rarity: "R" }, { id: "c_swan", name: "ハクチョウ", emoji: "🦢", rarity: "R" },
+  // SR (Super Rare) - 20 kinds
+  { id: "c_wolf", name: "オオカミ", emoji: "🐺", rarity: "SR" }, { id: "c_eagle", name: "ワシ", emoji: "🦅", rarity: "SR" }, { id: "c_shark", name: "サメ", emoji: "🦈", rarity: "SR" }, { id: "c_whale", name: "クジラ", emoji: "🐳", rarity: "SR" }, { id: "c_dolphin", name: "イルカ", emoji: "🐬", rarity: "SR" }, { id: "c_dino", name: "恐竜", emoji: "🦖", rarity: "SR" }, { id: "c_croc", name: "ワニ", emoji: "🐊", rarity: "SR" }, { id: "c_snake", name: "ヘビ", emoji: "🐍", rarity: "SR" }, { id: "c_boar", name: "イノシシ", emoji: "🐗", rarity: "SR" }, { id: "c_zebra", name: "シマウマ", emoji: "🦓", rarity: "SR" }, { id: "c_deer", name: "シカ", emoji: "🦌", rarity: "SR" }, { id: "c_giraffe", name: "キリン", emoji: "🦒", rarity: "SR" }, { id: "c_elephant", name: "ゾウ", emoji: "🐘", rarity: "SR" }, { id: "c_rhino", name: "サイ", emoji: "🦏", rarity: "SR" }, { id: "c_hippo", name: "カバ", emoji: "🦛", rarity: "SR" }, { id: "c_camel", name: "ラクダ", emoji: "🐪", rarity: "SR" }, { id: "c_kangaroo", name: "カンガルー", emoji: "🦘", rarity: "SR" }, { id: "c_lizard", name: "トカゲ", emoji: "🦎", rarity: "SR" }, { id: "c_turtle", name: "カメ", emoji: "🐢", rarity: "SR" }, { id: "c_sloth", name: "ナマケモノ", emoji: "🦥", rarity: "SR" },
+  // SSR (Double Super Rare) - 20 kinds
+  { id: "c_dragon", name: "ドラゴン", emoji: "🐉", rarity: "SSR" }, { id: "c_uni", name: "ユニコーン", emoji: "🦄", rarity: "SSR" }, { id: "c_phoenix", name: "フェニックス", emoji: "🔥", rarity: "SSR" }, { id: "c_pegasus", name: "ペガサス", emoji: "🐎", rarity: "SSR" }, { id: "c_ghost", name: "オバケ", emoji: "👻", rarity: "SSR" }, { id: "c_alien", name: "宇宙人", emoji: "👽", rarity: "SSR" }, { id: "c_octopus", name: "タコ", emoji: "🐙", rarity: "SSR" }, { id: "c_squid", name: "イカ", emoji: "🦑", rarity: "SSR" }, { id: "c_crab", name: "カニ", emoji: "🦀", rarity: "SSR" }, { id: "c_shrimp", name: "エビ", emoji: "🦐", rarity: "SSR" }, { id: "c_bat", name: "コウモリ", emoji: "🦇", rarity: "SSR" }, { id: "c_gorilla", name: "ゴリラ", emoji: "🦍", rarity: "SSR" }, { id: "c_scorpion", name: "サソリ", emoji: "🦂", rarity: "SSR" }, { id: "c_spider", name: "クモ", emoji: "🕷️", rarity: "SSR" }, { id: "c_butterfly", name: "チョウ", emoji: "🦋", rarity: "SSR" }, { id: "c_seal", name: "アザラシ", emoji: "🦭", rarity: "SSR" }, { id: "c_pbear", name: "シロクマ", emoji: "🐻‍❄️", rarity: "SSR" }, { id: "c_bison", name: "バイソン", emoji: "🐃", rarity: "SSR" }, { id: "c_mammoth", name: "マンモス", emoji: "🦣", rarity: "SSR" }, { id: "c_dodo", name: "ドードー", emoji: "🦤", rarity: "SSR" },
+  // L (Legendary) - 20 kinds
+  { id: "c_ufo", name: "UFO", emoji: "🛸", rarity: "L" }, { id: "c_robot", name: "ロボット", emoji: "🤖", rarity: "L" }, { id: "c_rocket", name: "ロケット", emoji: "🚀", rarity: "L" }, { id: "c_earth", name: "ちきゅう", emoji: "🌍", rarity: "L" }, { id: "c_trex", name: "Tレックス", emoji: "🦖", rarity: "L" }, { id: "c_sauro", name: "ブラキオ", emoji: "🦕", rarity: "L" }, { id: "c_comet", name: "すいせい", emoji: "☄️", rarity: "L" }, { id: "c_volcano", name: "かざん", emoji: "🌋", rarity: "L" }, { id: "c_galaxy", name: "ぎんが", emoji: "🌌", rarity: "L" }, { id: "c_hydra", name: "ヒドラ", emoji: "🐲", rarity: "L" }, { id: "c_cerberus", name: "ケルベロス", emoji: "🐕‍🦺", rarity: "L" }, { id: "c_ninja", name: "ニンジャ", emoji: "🥷", rarity: "L" }, { id: "c_samurai", name: "サムライ", emoji: "⚔️", rarity: "L" }, { id: "c_blackhole", name: "ブラックホール", emoji: "⚫", rarity: "L" }, { id: "c_griffin", name: "グリフォン", emoji: "🦅🦁", rarity: "L" }, { id: "c_kraken", name: "クラーケン", emoji: "🦑🌊", rarity: "L" }, { id: "c_saturn", name: "どせい", emoji: "🪐", rarity: "L" }, { id: "c_meteor", name: "いんせき", emoji: "🌠", rarity: "L" }, { id: "c_genie", name: "まじん", emoji: "🧞", rarity: "L" }, { id: "c_fairy", name: "ようせい", emoji: "🧚", rarity: "L" },
+];
+const RARITY_WEIGHTS = { 'N': 45, 'R': 30, 'SR': 15, 'SSR': 7, 'L': 3 };
+
+function App() {
+  const [screen, setScreen] = useState('home'); 
+  const [activeTab, setActiveTab] = useState("be_group");
+  const [selectedLessonId, setSelectedLessonId] = useState(null);
+  
+  const [quizState, setQuizState] = useState({
+    mode: 'choice',
+    questions: [], currentIndex: 0, answers: [], currentQ: null, selectedChoice: null,
+    arrangePicked: [], isCorrect: null, showExplain: false, shuffledChoices: [], combo: 0
+  });
+
+  const [gachaState, setGachaState] = useState({ mode: 'idle', resultCard: null, isNew: false });
+  const [showGallery, setShowGallery] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+
+  const [userData, setUserData] = useState({
+    coins: 0, ownedCards: ["c_cat"], lessonStats: {}, totalCorrect: 0, dailyPoints: { date: "", points: 0 }
+  });
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+      try {
+          const saved = localStorage.getItem(LS_KEY);
+          if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.lessonStats) {
+                  Object.keys(parsed.lessonStats).forEach(lid => {
+                      const l = parsed.lessonStats[lid];
+                      if(l.choice && l.choice.stars > 3) l.choice.stars = 3;
+                      if(l.arrange && l.arrange.stars > 3) l.arrange.stars = 3;
+                  });
+              }
+              setUserData(prev => ({ ...prev, ...parsed }));
+          }
+      } catch {}
+  }, []);
+
+  useEffect(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(userData)); } catch {} }, [userData]);
+
+  useEffect(() => {
+      const today = getTodayString();
+      if (userData.dailyPoints.date !== today) setUserData(prev => ({ ...prev, dailyPoints: { date: today, points: 0 } }));
+  }, [userData.dailyPoints.date]);
+
+  const prepareLesson = (lid) => { setSelectedLessonId(lid); setScreen('modal_mode'); };
+
+  const startLesson = (mode) => {
+    const lesson = LESSONS.find(l => l.id === selectedLessonId);
+    const newQuestions = [];
+    for(let i=0; i<QUESTIONS_PER_SET; i++) newQuestions.push(lesson.generator());
+    
+    const firstQ = newQuestions[0];
+    const choices = mode === 'choice' ? ensureFourChoices(firstQ.choices) : shuffle(firstQ.speak.replace(/[.?!]/g, '').split(' ')); 
+
+    setQuizState({
+        mode: mode, questions: newQuestions, currentIndex: 0, answers: Array(QUESTIONS_PER_SET).fill(null),
+        currentQ: firstQ, selectedChoice: null, arrangePicked: [], isCorrect: null, showExplain: false,
+        shuffledChoices: choices, combo: 0
+    });
+    setScreen('quiz');
+    setShowHint(false);
+  };
+
+  const handleChoiceAnswer = (choice) => {
+    if (quizState.showExplain) return;
+    finalizeAnswer(choice === quizState.currentQ.correctAnswerText, choice);
+  };
+
+  const handleArrangePick = (word, indexInChoices) => {
+      if (quizState.showExplain) return;
+      const newPicked = [...quizState.arrangePicked, { word, idx: indexInChoices }];
+      setQuizState(prev => ({ ...prev, arrangePicked: newPicked }));
+      if (newPicked.length === quizState.shuffledChoices.length) {
+          const sentence = newPicked.map(p => p.word).join(' ');
+          const correctSentence = quizState.currentQ.speak.replace(/[.?!]/g, '');
+          finalizeAnswer(sentence === correctSentence, null);
+      }
+  };
+  
+  const resetArrange = () => setQuizState(prev => ({ ...prev, arrangePicked: [] }));
+
+  const finalizeAnswer = (isCorrect, choiceVal) => {
+    speakEn(quizState.currentQ.speak);
+    const newAnswers = [...quizState.answers];
+    newAnswers[quizState.currentIndex] = isCorrect;
+    setQuizState(prev => ({ ...prev, selectedChoice: choiceVal, isCorrect: isCorrect, showExplain: true, answers: newAnswers, combo: isCorrect ? prev.combo + 1 : 0 }));
+  };
+
+  const nextQuestion = () => {
+    const nextIdx = quizState.currentIndex + 1;
+    if (nextIdx >= QUESTIONS_PER_SET) {
+        finishQuiz();
+    } else {
+        const nextQ = quizState.questions[nextIdx];
+        const nextChoices = quizState.mode === 'choice' ? ensureFourChoices(nextQ.choices) : shuffle(nextQ.speak.replace(/[.?!]/g, '').split(' '));
+        setQuizState(prev => ({
+            ...prev, currentIndex: nextIdx, currentQ: nextQ, selectedChoice: null, arrangePicked: [],
+            isCorrect: null, showExplain: false, shuffledChoices: nextChoices
+        }));
+        setShowHint(false);
+    }
+  };
+
+  const finishQuiz = () => {
+    const correctCount = quizState.answers.filter(a => a === true).length;
+    let earnedCoins = correctCount * 5;
+    if (correctCount === 10) earnedCoins += 50; else if (correctCount >= 8) earnedCoins += 20;
+
+    const lid = selectedLessonId;
+    const mode = quizState.mode;
+    const currentLessonStats = userData.lessonStats[lid] || { choice: {stars:0}, arrange: {stars:0} };
+    const modeStats = currentLessonStats[mode] || { stars:0, playCount:0, highScore:0 };
+
+    if (modeStats.stars >= MAX_STARS) {
+        earnedCoins = Math.floor(earnedCoins / 2);
+    }
+
+    let newStars = modeStats.stars;
+    if (correctCount === 10 && newStars < MAX_STARS) newStars += 1;
+    
+    const newModeStats = { stars: newStars, playCount: (modeStats.playCount || 0) + 1, highScore: Math.max((modeStats.highScore || 0), correctCount * 10) };
+    const today = getTodayString();
+    const currentDaily = userData.dailyPoints.date === today ? userData.dailyPoints.points : 0;
+
+    setUserData(prev => ({
+        ...prev, coins: prev.coins + earnedCoins, totalCorrect: prev.totalCorrect + correctCount,
+        lessonStats: { ...prev.lessonStats, [lid]: { ...currentLessonStats, [mode]: newModeStats } },
+        dailyPoints: { date: today, points: currentDaily + earnedCoins }
+    }));
+    setScreen('result');
+  };
+
+  const startGacha = () => {
+      if (userData.coins < GACHA_COST) return alert(`${GACHA_COST}コイン必要です！`);
+      setUserData(prev => ({ ...prev, coins: prev.coins - GACHA_COST }));
+      setGachaState({ mode: 'chest', resultCard: null, isNew: false });
+  };
+  const openChest = () => {
+      const availableRarities = Object.keys(RARITY_WEIGHTS);
+      const weightedPool = [];
+      availableRarities.forEach(r => { for(let i=0; i<RARITY_WEIGHTS[r]; i++) weightedPool.push(r); });
+      const rarity = rand(weightedPool);
+      const pool = CARDS.filter(c => c.rarity === rarity);
+      const card = rand(pool) || CARDS[0];
+      const isNew = !userData.ownedCards.includes(card.id);
+      setGachaState(prev => ({ ...prev, mode: 'open' }));
+      setTimeout(() => {
+          setGachaState({ mode: 'result', resultCard: card, isNew: isNew });
+          if(isNew) setUserData(prev => ({ ...prev, ownedCards: [...prev.ownedCards, card.id] }));
+      }, 1000);
+  };
+  const closeGacha = () => setGachaState({ mode: 'idle', resultCard: null, isNew: false });
+
+  // Save/Load
+  const exportData = () => { const blob = new Blob([JSON.stringify(userData)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`english-save.json`; a.click(); };
+  const importData = (e) => { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=(ev)=>{ try{setUserData(p=>({...p,...JSON.parse(ev.target.result)}));alert("OK!");}catch{alert("Error");} }; r.readAsText(f); };
+  const resetData = () => { if(confirm("データを消しますか？")) { localStorage.removeItem(LS_KEY); window.location.reload(); } };
+
+  // --- Render Helpers ---
+  const StarIcon = ({ filled }) => (
+    <svg className={`w-9 h-9 md:w-10 md:h-10 star-icon ${filled ? 'text-yellow-400 star-active' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+  );
+
+  const renderStarsRow = (count) => (
+      <div className="flex gap-1 justify-center">
+        {[...Array(MAX_STARS)].map((_, i) => <StarIcon key={i} filled={i < count} />)}
+      </div>
+  );
+
+  // Helper to determine card style based on rarity
+  const getCardStyle = (rarity) => {
+      switch (rarity) {
+          case 'L': return 'card-l';
+          case 'SSR': return 'card-ssr';
+          case 'SR': return 'bg-gradient-to-br from-yellow-100 to-amber-300 border-amber-400 shadow-md';
+          case 'R': return 'bg-gradient-to-br from-slate-200 to-slate-400 border-slate-500 shadow-sm';
+          default: return 'bg-white border-slate-200 shadow-sm';
+      }
+  };
+
+  const getGroupHint = (hintId) => HINT_TABLES[hintId] || HINT_TABLES["default"];
+
+  // 1. Home
+  if (screen === 'home') {
+      const currentCardsCount = userData.ownedCards.length;
+      return (
+        <div className="min-h-screen pb-24 font-medium">
+            <header className="bg-white/90 backdrop-blur-sm p-3 shadow-sm sticky top-0 z-20 rounded-b-3xl border-b-4 border-indigo-100">
+                <div className="max-w-xl mx-auto flex flex-nowrap justify-between items-center gap-2 overflow-x-auto scrollbar-hide">
+                    <h1 className="text-lg md:text-xl font-extrabold text-indigo-600 flex items-center gap-1 shrink-0">
+                        <span className="animate-bounce">🏫</span> <T t="小学2年生"/> English
+                    </h1>
+                    <div className="flex items-center gap-2 text-xs md:text-sm shrink-0">
+                        <div className="bg-sky-100 text-sky-800 px-2 py-1 rounded-lg font-bold border border-sky-200 flex items-center whitespace-nowrap"><span className="mr-1">📅</span><T t="今日"/>: {userData.dailyPoints.points}</div>
+                        <div className="bg-amber-100 text-amber-800 px-2 py-1 rounded-lg font-bold border border-amber-200 flex items-center shadow-sm whitespace-nowrap"><span className="mr-1">💰</span><T t="合計"/>: {userData.coins}</div>
+                        <div className="flex gap-1">
+                            <button onClick={exportData} title="セーブ" className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 border border-slate-300 font-bold whitespace-nowrap">セーブ</button>
+                            <label title="ロード" className="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 border border-slate-300 cursor-pointer font-bold whitespace-nowrap">ロード<input type="file" ref={fileInputRef} onChange={importData} className="hidden" accept=".json"/></label>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-xl mx-auto p-4">
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide justify-center">
+                    {LESSON_GROUPS.map(g => (
+                        <button key={g.id} onClick={() => setActiveTab(g.id)} className={`px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all flex items-center gap-1 ${activeTab===g.id ? g.bg+' '+g.text+' ring-2 ring-offset-2 ring-'+g.text.split('-')[1]+'-300 shadow-md scale-105' : 'bg-white text-slate-400 border border-slate-200'}`}>
+                            <span>{g.icon}</span> {g.name}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 mb-8 animate-slide-up">
+                    {LESSONS.filter(l => l.groupId === activeTab).map(l => {
+                        const group = LESSON_GROUPS.find(g => g.id === l.groupId);
+                        const lessonData = userData.lessonStats[l.id] || { choice: {stars:0}, arrange: {stars:0} };
+                        const choiceStats = lessonData.choice || { stars:0, highScore:0, playCount:0 };
+                        const arrangeStats = lessonData.arrange || { stars:0, highScore:0, playCount:0 };
+                        
+                        return (
+                            <button key={l.id} onClick={() => prepareLesson(l.id)} className={`relative ${group.bg} rounded-2xl p-1 border-b-4 ${group.border} transition-all hover:-translate-y-1 active:scale-95 active:translate-y-0 group w-full min-h-[90px]`}>
+                                <div className="bg-white/80 rounded-xl p-2 flex flex-row items-center gap-4 text-left w-full h-full">
+                                    <div className="text-4xl pl-2 group-hover:scale-110 transition-transform">{l.icon}</div>
+                                    <div className="flex-grow flex flex-col justify-center">
+                                        <div className={`font-bold text-lg mb-2 ${group.text}`}><T t={l.name} /></div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            
+                                            {/* Lv1 Stats */}
+                                            <div className="bg-white rounded-lg p-1 shadow-sm border border-slate-100 flex items-center justify-between px-2">
+                                                <div className="flex flex-col">
+                                                    <div className="text-xs font-bold text-sky-700 flex items-center gap-1"><span className="bg-sky-100 px-1 rounded text-sky-600">Lv1</span> <T t="穴埋"/>め</div>
+                                                    <div className="mt-1 transform scale-75 origin-left">{renderStarsRow(choiceStats.stars)}</div>
+                                                </div>
+                                                <div className="text-right flex gap-3">
+                                                    <div className="flex flex-col items-center"><span className="text-[8px] text-slate-400 leading-none"><T t="回"/>数</span><span className="text-sm font-black text-slate-600 leading-tight">{choiceStats.playCount}</span></div>
+                                                    <div className="flex flex-col items-center"><span className="text-[8px] text-slate-400 leading-none"><T t="最高"/></span><span className="text-sm font-black text-slate-600 leading-tight">{choiceStats.highScore}</span></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Lv2 Stats */}
+                                            <div className="bg-white rounded-lg p-1 shadow-sm border border-slate-100 flex items-center justify-between px-2">
+                                                <div className="flex flex-col">
+                                                    <div className="text-xs font-bold text-pink-700 flex items-center gap-1"><span className="bg-pink-100 px-1 rounded text-pink-600">Lv2</span> <T t="並"/>べ<T t="替"/>え</div>
+                                                    <div className="mt-1 transform scale-75 origin-left">{renderStarsRow(arrangeStats.stars)}</div>
+                                                </div>
+                                                <div className="text-right flex gap-3">
+                                                    <div className="flex flex-col items-center"><span className="text-[8px] text-slate-400 leading-none"><T t="回"/>数</span><span className="text-sm font-black text-slate-600 leading-tight">{arrangeStats.playCount}</span></div>
+                                                    <div className="flex flex-col items-center"><span className="text-[8px] text-slate-400 leading-none"><T t="最高"/></span><span className="text-sm font-black text-slate-600 leading-tight">{arrangeStats.highScore}</span></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="bg-gradient-to-br from-indigo-800 to-violet-900 rounded-3xl p-1 shadow-lg relative overflow-hidden mb-4 group cursor-pointer hover:shadow-xl transition-all" onClick={startGacha}>
+                    <div className="bg-white/10 p-5 rounded-[20px] relative z-10 flex flex-col items-center text-center">
+                        <h2 className="font-bold text-lg text-white flex items-center gap-2 mb-1"><span className="text-2xl animate-float">💎</span> レアカードガチャ</h2>
+                        <p className="text-indigo-200 text-xs mb-3">1回 {GACHA_COST}コイン</p>
+                        <div className="relative w-full">
+                            <div className="w-full bg-gradient-to-r from-yellow-300 to-amber-500 text-amber-900 font-extrabold py-3 rounded-xl shadow-lg border-b-4 border-amber-600 group-hover:scale-[1.02] transition-transform">ガチャを引く！</div>
+                            {userData.coins >= GACHA_COST && <span className="absolute -top-3 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-lg border border-white">引けるよ！</span>}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="flex justify-center gap-4">
+                    <button onClick={() => setShowGallery(true)} className="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-lg text-sm hover:bg-indigo-700 transition-colors">📖 カードずかん</button>
+                    <button onClick={resetData} className="text-xs text-slate-400 underline hover:text-red-400">リセット</button>
+                </div>
+            </main>
+
+            {/* Gallery Modal */}
+            {showGallery && (
+                <div className="fixed inset-0 bg-slate-900/90 z-50 p-4 overflow-y-auto">
+                    <div className="max-w-2xl mx-auto bg-white rounded-3xl p-6 min-h-full animate-pop-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800">📖 カードずかん</h2>
+                            <button onClick={() => setShowGallery(false)} className="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-full font-bold text-sm">とじる</button>
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                            {CARDS.map(c => {
+                                const has = userData.ownedCards.includes(c.id);
+                                return (
+                                    <div key={c.id} className={`aspect-[3/4] rounded-xl flex flex-col items-center justify-center border-2 shadow-sm ${has ? getCardStyle(c.rarity) : 'border-slate-100 bg-slate-50'}`}>
+                                        <div className={`text-4xl mb-2 ${has ? 'opacity-100' : 'opacity-20 grayscale'}`}>{c.emoji}</div>
+                                        <div className={`text-[10px] font-bold text-center leading-tight ${has && c.rarity==='L' ? 'text-white' : 'text-slate-700'}`}>{has ? c.name : '???'}</div>
+                                        {has && <div className="text-[8px] bg-white/50 px-1.5 py-0.5 rounded mt-1 font-bold text-slate-500">{c.rarity}</div>}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Gacha Modal */}
+            {gachaState.mode !== 'idle' && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    {gachaState.mode === 'chest' && (
+                        <div className="text-center animate-pop-in">
+                            <div className="text-white font-bold text-2xl mb-8 drop-shadow-md">タップしてあける！</div>
+                            <button onClick={openChest} className="text-[150px] animate-shake cursor-pointer drop-shadow-[0_0_50px_rgba(255,215,0,0.6)] hover:scale-110 transition-transform">🎁</button>
+                        </div>
+                    )}
+                    {gachaState.mode === 'open' && <div className="text-9xl animate-ping text-white">✨</div>}
+                    {gachaState.mode === 'result' && (
+                        <div className={`rounded-3xl p-8 w-full max-w-sm text-center animate-pop-in relative overflow-hidden border-4 ${getCardStyle(gachaState.resultCard.rarity)}`}>
+                            {/* Sparkles Overlay for high rarity */}
+                            {['L', 'SSR'].includes(gachaState.resultCard.rarity) && (
+                                <div className="absolute inset-0 pointer-events-none opacity-50 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxwYXRoIGQ9Ik0xMCAwIEwxMiA4IEwyMCAxMCBMMTIgMTIgTDEwIDIwIEw4IDEyIEwwIDEwIEw4IDggWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+')] bg-[length:20px_20px] animate-pulse"></div>
+                            )}
+                            
+                            {gachaState.isNew && <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce shadow-md z-10">NEW!</div>}
+                            
+                            <div className="inline-block px-3 py-1 rounded-full bg-white/80 text-sm font-bold text-slate-500 mb-4 shadow-sm">{gachaState.resultCard.rarity}</div>
+                            <div className="text-[120px] mb-6 leading-none animate-float drop-shadow-lg">{gachaState.resultCard.emoji}</div>
+                            <h2 className={`text-2xl font-bold mb-8 ${gachaState.resultCard.rarity === 'L' ? 'text-white' : 'text-slate-800'}`}>{gachaState.resultCard.name}</h2>
+                            <button onClick={closeGacha} className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl w-full shadow-lg hover:bg-indigo-700 z-10 relative">とじる</button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+      );
+  }
+
+  // 2. Mode Select
+  if (screen === 'modal_mode') {
+      return (
+          <div className="fixed inset-0 bg-indigo-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-[40px] p-8 w-full max-w-sm animate-pop-in shadow-2xl relative">
+                  <button onClick={() => setScreen('home')} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center hover:bg-slate-200">×</button>
+                  <h2 className="text-2xl font-bold text-center mb-6 text-indigo-800"><T t="難易度を選んでね"/></h2>
+                  <div className="grid gap-4">
+                      <button onClick={() => startLesson('choice')} className="group bg-sky-50 hover:bg-sky-100 border-b-4 border-sky-200 hover:border-sky-300 p-4 rounded-3xl text-left flex items-center gap-4 transition-all active:scale-95">
+                          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-4xl shadow-sm group-hover:scale-110 transition-transform">📝</div>
+                          <div><div className="font-bold text-sky-800 text-lg">Lv1 <T t="穴埋"/>め</div><div className="text-xs text-sky-600 font-bold"><T t="選"/>んで<T t="答"/>える</div></div>
+                      </button>
+                      <button onClick={() => startLesson('arrange')} className="group bg-pink-50 hover:bg-pink-100 border-b-4 border-pink-200 hover:border-pink-300 p-4 rounded-3xl text-left flex items-center gap-4 transition-all active:scale-95">
+                          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-4xl shadow-sm group-hover:scale-110 transition-transform">🧩</div>
+                          <div><div className="font-bold text-pink-800 text-lg">Lv2 <T t="並"/>べ<T t="替"/>え</div><div className="text-xs text-pink-600 font-bold"><T t="単語"/>を<T t="並"/>べる</div></div>
+                      </button>
+                  </div>
+              </div>
+          </div>
+      );
+  }
+
+  // 3. Quiz
+  if (screen === 'quiz' && quizState.currentQ) {
+      const { currentQ, currentIndex, shuffledChoices, isCorrect, showExplain, combo, answers, arrangePicked } = quizState;
+      const lesson = LESSONS.find(l => l.id === selectedLessonId);
+      const hint = getGroupHint(lesson.hintId);
+
+      return (
+        <div className="min-h-screen bg-slate-100 flex flex-col items-center p-4 relative overflow-hidden">
+            {combo > 1 && <div className="absolute top-32 right-4 text-amber-500 font-black italic text-5xl animate-pop-in z-50 pointer-events-none combo-text rotate-12 drop-shadow-xl">{combo} COMBO!</div>}
+            
+            {/* Header / Progress */}
+            <div className="w-full max-w-2xl mt-2 mb-4 relative z-10">
+                <div className="flex justify-between items-center mb-2">
+                    <div className="flex gap-2">
+                        <span className="text-xs font-bold text-slate-500 bg-white/80 px-2 py-1 rounded-lg">Q {currentIndex + 1} / {QUESTIONS_PER_SET}</span>
+                        <button onClick={()=>setShowHint(true)} className="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg border border-yellow-200 shadow-sm hover:bg-yellow-200 transition-colors">💡 ヒント</button>
+                    </div>
+                    <button onClick={() => setScreen('home')} className="text-slate-400 text-sm font-bold bg-white/80 px-3 py-1 rounded-full shadow-sm hover:text-red-400">やめる</button>
+                </div>
+                <div className="flex justify-between gap-1.5 p-2 bg-white/60 rounded-full backdrop-blur-sm">
+                    {answers.map((ans, i) => <div key={i} className={`h-3 w-full rounded-full transition-all duration-300 ${i===currentIndex?'bg-indigo-500 scale-125 shadow-lg ring-2 ring-indigo-200':ans===true?'bg-green-400':ans===false?'bg-red-400':'bg-slate-200'}`}></div>)}
+                </div>
+            </div>
+
+            {/* Question Card */}
+            <div className="w-full max-w-2xl bg-white rounded-[32px] shadow-xl overflow-hidden flex-grow flex flex-col relative animate-slide-up z-10 border-4 border-white">
+                <div className="bg-indigo-50 p-6 text-center border-b border-indigo-100 flex-grow flex flex-col justify-center items-center min-h-[200px] relative overflow-hidden">
+                    <div className="absolute top-[-20px] left-[-20px] w-24 h-24 bg-indigo-100 rounded-full opacity-50"></div>
+                    <div className="absolute bottom-[-10px] right-[-10px] w-32 h-32 bg-indigo-100 rounded-full opacity-50"></div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 leading-relaxed relative z-10">
+                        {quizState.mode === 'choice' ? currentQ.en.split('___').map((part, i, arr) => (
+                                <React.Fragment key={i}>{part}{i < arr.length - 1 && <span className={`inline-block border-b-4 mx-2 px-3 min-w-[80px] text-center rounded-lg transition-colors ${showExplain ? (isCorrect ? 'border-green-400 bg-green-100 text-green-700' : 'border-red-400 bg-red-100 text-red-600') : 'border-slate-300 bg-white text-transparent'}`}>{showExplain ? currentQ.correctAnswerText : '?'}</span>}</React.Fragment>
+                            )) : (
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {arrangePicked.length > 0 ? arrangePicked.map((p, i) => <span key={i} className="px-4 py-2 bg-white rounded-xl shadow-sm border-b-4 border-indigo-200 font-bold text-indigo-700 text-xl animate-pop-in">{p.word}</span>) : <span className="text-slate-400 text-lg border-2 border-dashed border-slate-300 rounded-xl px-6 py-4"><T t="単語"/>を<T t="選"/>んで<T t="文"/>を<T t="作"/>ろう</span>}
+                            </div>
+                        )}
+                    </h2>
+                    <div className="text-lg font-bold text-slate-600 bg-white/80 backdrop-blur-md px-6 py-2 rounded-2xl shadow-sm relative z-10"><T t={currentQ.jp} /></div>
+                </div>
+                <div className="p-4 bg-white/50">
+                    {quizState.mode === 'choice' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {shuffledChoices.map((choice, idx) => (
+                                <button key={idx} onClick={() => handleChoiceAnswer(choice)} disabled={showExplain} className={`py-5 rounded-2xl text-xl font-bold border-b-4 transition-all shadow-sm active:scale-95 active:border-b-0 active:translate-y-1 ${showExplain ? (choice===currentQ.correctAnswerText?'bg-green-100 border-green-400 text-green-800':choice===quizState.selectedChoice?'bg-red-100 border-red-400 text-red-800 opacity-60':'bg-slate-50 border-slate-200 text-slate-300') : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700'}`}>{choice}</button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div>
+                             <div className="flex flex-wrap gap-3 justify-center mb-6">
+                                {shuffledChoices.map((word, idx) => {
+                                    const isPicked = arrangePicked.some(p => p.idx === idx);
+                                    return <button key={idx} onClick={() => handleArrangePick(word, idx)} disabled={isPicked || showExplain} className={`px-5 py-3 rounded-2xl text-xl font-bold border-b-4 transition-all active:scale-95 active:border-b-0 active:translate-y-1 ${isPicked ? 'opacity-0 scale-50' : 'bg-white border-slate-200 hover:bg-indigo-50 hover:border-indigo-300 text-slate-700 shadow-sm'}`}>{word}</button>;
+                                })}
+                            </div>
+                            <div className="text-center"><button onClick={resetArrange} disabled={showExplain} className="text-sm text-red-400 font-bold bg-white px-4 py-2 rounded-full shadow-sm hover:bg-red-50">リセット</button></div>
+                        </div>
+                    )}
+                </div>
+                {showExplain && (
+                    <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-md border-t border-slate-100 p-6 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col md:flex-row items-center justify-between gap-6 z-20 rounded-t-[32px]">
+                        <div className="flex items-center gap-4">
+                            <div className={`text-5xl ${isCorrect ? 'animate-pop-in' : 'animate-shake'}`}>{isCorrect ? '⭕' : '❌'}</div>
+                            <div>
+                                <div className={`font-black text-2xl mb-1 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>{isCorrect ? 'Good Job!' : 'Don\'t mind!'}</div>
+                                <div className="text-slate-600 text-sm font-bold"><T t={currentQ.explainJP}/></div>
+                            </div>
+                        </div>
+                        <button onClick={nextQuestion} className="w-full md:w-auto px-10 py-4 bg-indigo-500 text-white font-bold text-lg rounded-2xl shadow-lg hover:scale-105 hover:bg-indigo-600 transition-all">{currentIndex === QUESTIONS_PER_SET - 1 ? 'けっかへ' : 'つぎへ →'}</button>
+                    </div>
+                )}
+            </div>
+
+            {/* Hint Modal */}
+            {showHint && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowHint(false)}>
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-sm animate-pop-in shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-bold text-xl mb-4 text-center border-b pb-2">💡 {hint.title}</h3>
+                        {hint.content}
+                        <button onClick={() => setShowHint(false)} className="mt-6 w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors">とじる</button>
+                    </div>
+                </div>
+            )}
+        </div>
+      );
+  }
+
+  // 4. Result
+  if (screen === 'result') {
+      const correctCount = quizState.answers.filter(a => a === true).length;
+      const isPerfect = correctCount === 10;
+      const lid = selectedLessonId;
+      const mode = quizState.mode;
+      const stats = userData.lessonStats[lid][mode];
+      const isMaster = stats.stars >= MAX_STARS;
+
+      return (
+          <div className="min-h-screen bg-indigo-500 flex items-center justify-center p-4 relative overflow-hidden">
+             {isPerfect && <><div className="confetti" style={{left:'20%',backgroundColor:'#ffd700',animationDuration:'2s'}}></div><div className="confetti" style={{left:'50%',backgroundColor:'#ff69b4',animationDuration:'2.5s'}}></div><div className="confetti" style={{left:'80%',backgroundColor:'#00bfff',animationDuration:'2.2s'}}></div></>}
+             <div className="bg-white rounded-[40px] p-8 w-full max-w-sm text-center shadow-2xl animate-pop-in border-8 border-white/20 bg-clip-padding">
+                <div className="text-sm font-bold text-slate-400 mb-2 tracking-widest">RESULT</div>
+                <h2 className={`text-4xl font-black mb-6 ${isPerfect ? 'text-yellow-500 drop-shadow-sm' : 'text-slate-700'}`}>{isPerfect ? 'PERFECT!!' : 'FINISH!'}</h2>
+                <div className="text-8xl mb-2 animate-bounce-gentle">{isPerfect ? '👑' : (correctCount >= 8 ? '🥈' : '🥉')}</div>
+                <div className="text-3xl font-black text-slate-800 mb-8">{correctCount} / 10 <span className="text-sm font-bold text-slate-400 ml-1"><T t="正解"/></span></div>
+                {isPerfect && (<div className="mb-6 bg-yellow-50 border-2 border-yellow-200 p-3 rounded-2xl animate-pulse"><span className="text-yellow-600 font-bold text-sm block mb-1">✨ Star GET! ✨</span>{renderStarsRow(MAX_STARS)}</div>)}
+                
+                <div className="bg-slate-100 rounded-2xl p-4 mb-6">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold text-slate-600"><T t="獲得"/>コイン</span>
+                        <span className="font-black text-2xl text-amber-500">+{correctCount * 5 + (isPerfect?50:correctCount>=8?20:0)}</span>
+                    </div>
+                    {isMaster && <div className="text-xs text-red-400 font-bold text-right">※マスター済みのため半分</div>}
+                </div>
+
+                <div className="grid gap-3">
+                    <button onClick={() => setScreen('home')} className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 transition-transform active:scale-95">ホームへもどる</button>
+                    <button onClick={() => setScreen('modal_mode')} className="w-full py-4 rounded-2xl bg-white border-2 border-indigo-100 text-indigo-600 font-bold hover:bg-indigo-50 transition-colors">もういちど</button>
+                </div>
+             </div>
+          </div>
+      );
+  }
+  return null;
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+    </script>
+</body>
+</html>
