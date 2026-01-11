@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小学2年生向け 英語文法あそび v12.6</title>
+    <title>小学2年生向け 英語文法あそび v12.7</title>
     
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -87,7 +87,7 @@ const T = ({ t }) => {
         "飯": <F rb="飯" rt="はん" />, "動詞": <F rb="動詞" rt="どうし" />, "現在": <F rb="現在" rt="げんざい" />,
         "過去": <F rb="過去" rt="かこ" />, "助動詞": <F rb="助動詞" rt="じょどうし" />, "疑問詞": <F rb="疑問詞" rt="ぎもんし" />,
         "疑問": <F rb="疑問" rt="ぎもん" />, 
-        "前置詞": <F rb="前置詞" rt="ぜんちし" />, "場所": <F rb="場所" rt="ばしょ" />, "難易度": <F rb="難易度" rt="なんいど" />,
+        "前置詞": <F rb="前置詞" rt="ぜんちし" />, "場所": <F rb="場所" rt="ばしょ" />, "時間": <F rb="時間" rt="じかん" />, "難易度": <F rb="難易度" rt="なんいど" />,
         "穴埋": <F rb="穴埋" rt="あなう" />, "並べ替": <F rb="並べ替" rt="ならべか" />,
         "複": <F rb="複" rt="ふく" />, "数": <F rb="すう" />, "進行形": <F rb="進行形" rt="しんこうけい" />,
         "代名詞": <F rb="代名詞" rt="だいめいし" />, "規則": <F rb="規則" rt="きそく" />, "不規則": <F rb="不規則" rt="ふきそく" />,
@@ -98,7 +98,7 @@ const T = ({ t }) => {
         "置": <F rb="置" rt="お" />, "元": <F rb="元" rt="もと" />, "最初": <F rb="最初" rt="さいしょ" />,
         "言葉": <F rb="言葉" rt="ことば" />, "否定": <F rb="否定" rt="ひてい" />, "構文": <F rb="構文" rt="こうぶん" />,
         "獲得": <F rb="獲得" rt="かくとく" />, "単": <F rb="単" rt="たん" />, "例": <F rb="例" rt="れい" />,
-        "別": <F rb="別" rt="べつ" />, "机": <F rb="机" rt="つくえ" />
+        "別": <F rb="別" rt="べつ" />, "机": <F rb="机" rt="つくえ" />, "総復習": <F rb="総復習" rt="そうふくしゅう" />
     };
     let parts = [t];
     Object.keys(map).forEach(key => {
@@ -130,6 +130,7 @@ const getTodayString = () => {
 };
 
 // --- Config ---
+// ※LS_KEYは変更しないことでv12.6のデータを引き継ぎます
 const LS_KEY = "eigoAppS2_v12_6";
 const QUESTIONS_PER_SET = 10;
 const MAX_STARS = 3;
@@ -211,6 +212,82 @@ const HINT_TABLES = {
             </div>
         )
     },
+    "hint_verb_summary": {
+        title: "一般動詞のルールまとめ",
+        content: (
+            <div className="text-base space-y-4">
+                <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
+                    <h4 className="font-bold text-sky-700 border-b border-sky-200 pb-1 mb-2">1. 現在形 (今の習慣)</h4>
+                    <ul className="space-y-1 text-sm">
+                        <li><b>I, You, 複数</b> → そのまま (play)</li>
+                        <li><b>ひとり (He, She...)</b> → <span className="text-red-500 font-bold">s</span> をつける (play<span className="text-red-500 font-bold">s</span>)</li>
+                    </ul>
+                </div>
+                <div className="bg-orange-50 p-3 rounded-xl border border-orange-100">
+                    <h4 className="font-bold text-orange-700 border-b border-orange-200 pb-1 mb-2">2. 過去形 (昔のこと)</h4>
+                    <ul className="space-y-1 text-sm">
+                        <li>基本は <span className="text-red-500 font-bold">ed</span> をつける (played)</li>
+                        <li>形が変わるものもある (go → <span className="text-red-500 font-bold">went</span>)</li>
+                    </ul>
+                </div>
+                <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                    <h4 className="font-bold text-green-700 border-b border-green-200 pb-1 mb-2">3. 質問のしかた</h4>
+                    <ul className="space-y-1 text-sm">
+                        <li>現在: <b>Do</b> you...? / <b>Does</b> he...?</li>
+                        <li>過去: <b>Did</b> you...?</li>
+                        <li className="text-xs text-green-800 bg-green-100 p-1 rounded mt-1">※質問のとき、動詞は<b>元の形</b>に戻ります！<br/>(Does he <span className="line-through text-gray-400">plays</span> → play?)</li>
+                    </ul>
+                </div>
+            </div>
+        )
+    },
+    "hint_total_summary": {
+        title: "Be動詞 vs 一般動詞",
+        content: (
+            <div className="text-base space-y-4">
+                <p className="text-sm">英語の文は、大きく分けて2種類の動詞を使います。まぜないように注意！</p>
+                
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-pink-50 p-2 rounded-xl border border-pink-100">
+                        <h4 className="font-bold text-pink-700 text-center mb-2">Be動詞</h4>
+                        <div className="text-center text-2xl mb-1">😐 = 😊</div>
+                        <p className="text-xs text-center mb-2">イコールの関係</p>
+                        <ul className="text-xs space-y-1">
+                            <li>I <b>am</b> Ken.</li>
+                            <li>He <b>is</b> happy.</li>
+                            <li>You <b>are</b> kind.</li>
+                        </ul>
+                    </div>
+                    <div className="bg-sky-50 p-2 rounded-xl border border-sky-100">
+                        <h4 className="font-bold text-sky-700 text-center mb-2">一般動詞</h4>
+                        <div className="text-center text-2xl mb-1">🏃 🍎</div>
+                        <p className="text-xs text-center mb-2">動作・すること</p>
+                        <ul className="text-xs space-y-1">
+                            <li>I <b>play</b> soccer.</li>
+                            <li>He <b>eats</b> lunch.</li>
+                            <li>We <b>study</b>.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-sm">
+                    <h4 className="font-bold text-yellow-800 border-b border-yellow-200 pb-1 mb-2">★ 使い分けのコツ</h4>
+                    <ul className="space-y-2">
+                        <li>
+                            <span className="font-bold text-pink-600">Be動詞 (am, is, are)</span><br/>
+                            「〜です」「〜にいます」<br/>
+                            <span className="text-xs text-slate-500">質問: Am I...? / Is he...? / Are you...?</span>
+                        </li>
+                        <li>
+                            <span className="font-bold text-sky-600">一般動詞 (play, go...)</span><br/>
+                            「〜します」「〜動きます」<br/>
+                            <span className="text-xs text-slate-500">質問: Do you...? / Does he...? / Did you...?</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        )
+    },
     "hint_can": {
         title: "助動詞 (Canなど)",
         content: (
@@ -275,6 +352,37 @@ const HINT_TABLES = {
                         <span className="text-xs block text-gray-400">📦の横に🍎</span>
                     </div>
                 </div>
+            </div>
+        )
+    },
+    "hint_time_prep": {
+        title: "前置詞 (時間)",
+        content: (
+            <div className="text-base bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <p className="mb-3">いつのことかを表します。</p>
+                <ul className="space-y-2">
+                    <li className="bg-white p-2 rounded shadow-sm flex items-center">
+                        <span className="text-orange-600 text-xl font-bold w-12 text-center">at</span>
+                        <div className="text-sm">
+                            <b>時計の時間</b>などに<br/>
+                            <span className="text-xs text-gray-500">at 7:00, at noon (正午に)</span>
+                        </div>
+                    </li>
+                    <li className="bg-white p-2 rounded shadow-sm flex items-center">
+                        <span className="text-orange-600 text-xl font-bold w-12 text-center">on</span>
+                        <div className="text-sm">
+                            <b>曜日</b>や<b>特定の日</b>に<br/>
+                            <span className="text-xs text-gray-500">on Sunday, on May 5th</span>
+                        </div>
+                    </li>
+                    <li className="bg-white p-2 rounded shadow-sm flex items-center">
+                        <span className="text-orange-600 text-xl font-bold w-12 text-center">in</span>
+                        <div className="text-sm">
+                            <b>月、季節</b>や<b>長い時間</b>に<br/>
+                            <span className="text-xs text-gray-500">in August, in summer, in the morning</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
         )
     },
@@ -396,12 +504,49 @@ const genDidQuestion = () => { const subj = rand(["you", "he", "she"]); const t 
 const genVerbMaster = () => rand([genVerbPresent, genVerbPast, genVerbIrregular, genVerbQuestion, genDidQuestion])();
 const genCan = () => { const subj = rand(ALL_SUBJECTS); const act = rand([{en:"swim",jp:"泳げる"},{en:"run fast",jp:"速く走れる"},{en:"speak English",jp:"英語を話せる"}]); return { type: "choice", en: `${subj} ___ ${act.en}.`, choices: ["can", "is", "do", "cans"], correctAnswerText: "can", explainJP: "「〜できる」は can を使います。sはつきません。", speak: `${subj} can ${act.en}.`, jp: `${getJPSubj(subj)} ${act.jp}。` }; };
 const genAuxMix = () => { const pool = [ { en: "I ___ swim.", ans: "can", jp: "私は泳げます。", choices: ["can", "may", "must", "is"] }, { en: "You ___ study hard.", ans: "must", jp: "あなたは一生懸命勉強しなければなりません。", choices: ["must", "may", "can", "am"] }, { en: "___ I come in?", ans: "May", jp: "入ってもいいですか？", choices: ["May", "Must", "Am", "Do"] }, { en: "He ___ run fast.", ans: "can", jp: "彼は速く走れます。", choices: ["can", "must", "may", "is"] } ]; const q = rand(pool); return { type: "choice", en: q.en, choices: shuffle(q.choices), correctAnswerText: q.ans, explainJP: "Can(できる), Must(しなければならない), May(してもよい) を使い分けよう。", speak: q.en.replace('___', q.ans), jp: q.jp }; };
-const genWh = () => { const q = rand([ {wh:"What",tail:"is this?",jp:"これは何ですか？"}, {wh:"Who",tail:"is he?",jp:"彼はだれですか？"}, {wh:"Where",tail:"is my book?",jp:"私の本はどこ？"}, {wh:"When",tail:"is your birthday?",jp:"誕生日はいつ？"}, {wh:"How",tail:"are you?",jp:"元気ですか？(調子はどう？)"}, {wh:"How",tail:"many apples?",jp:"リンゴはいくつ(何個)？"} ]); return { type: "choice", en: `___ ${q.tail}`, choices: ["What", "Who", "Where", "When", "How"], correctAnswerText: q.wh, explainJP: "What(なに), Who(だれ), Where(どこ), When(いつ), How(どう) を選ぼう。", speak: `${q.wh} ${q.tail}`, jp: `${q.jp}` }; };
+
+// --- 修正: Wh選択肢に正解を確実に含める ---
+const genWh = () => { 
+    const q = rand([ {wh:"What",tail:"is this?",jp:"これは何ですか？"}, {wh:"Who",tail:"is he?",jp:"彼はだれですか？"}, {wh:"Where",tail:"is my book?",jp:"私の本はどこ？"}, {wh:"When",tail:"is your birthday?",jp:"誕生日はいつ？"}, {wh:"How",tail:"are you?",jp:"元気ですか？(調子はどう？)"}, {wh:"How",tail:"many apples?",jp:"リンゴはいくつ(何個)？"} ]); 
+    // 正解以外の選択肢を用意
+    const others = ["What", "Who", "Where", "When", "How"].filter(w => w !== q.wh);
+    // 正解を先頭にした配列を作成(ensureFourChoicesが先頭を正解とみなすため)
+    const choices = [q.wh, ...others];
+    
+    return { type: "choice", en: `___ ${q.tail}`, choices: choices, correctAnswerText: q.wh, explainJP: "What(なに), Who(だれ), Where(どこ), When(いつ), How(どう) を選ぼう。", speak: `${q.wh} ${q.tail}`, jp: `${q.jp}` }; 
+};
+
 const genPreposition = () => { const s = rand([ {p:"on", en:"on the desk", jp:"机の上に"}, {p:"in", en:"in the box", jp:"箱の中に"}, {p:"under", en:"under the table", jp:"テーブルの下に"}, {p:"by", en:"by the door", jp:"ドアのそばに"} ]); return { type: "choice", en: `The pen is ___ ${s.en.replace(s.p + ' ', '')}.`, choices: ["on", "in", "under", "by"], correctAnswerText: s.p, explainJP: "場所を表す言葉です。", speak: `The pen is ${s.en}.`, jp: `ペンは${s.jp}あります。` }; };
+
+// --- 追加: 前置詞(時間) ---
+const genTimePreposition = () => {
+    const s = rand([
+        {p:"at", en:"at 7:00", jp:"7時に", desc:"時計の時間"},
+        {p:"at", en:"at noon", jp:"正午に", desc:"特定の時間"},
+        {p:"at", en:"at night", jp:"夜に", desc:"特定の時間"},
+        {p:"on", en:"on Sunday", jp:"日曜日に", desc:"曜日"},
+        {p:"on", en:"on May 5th", jp:"5月5日に", desc:"特定の日"},
+        {p:"in", en:"in the morning", jp:"朝に", desc:"一日のうちの時間帯"},
+        {p:"in", en:"in August", jp:"8月に", desc:"月"},
+        {p:"in", en:"in summer", jp:"夏に", desc:"季節"}
+    ]);
+    return {
+        type: "choice", en: `I study ___ ${s.en.replace(s.p + ' ', '')}.`, 
+        choices: ["at", "on", "in", "to"], 
+        correctAnswerText: s.p, 
+        explainJP: `${s.desc}には ${s.p} を使います。`, 
+        speak: `I study ${s.en}.`, 
+        jp: `私は${s.jp}勉強します。` 
+    };
+};
+
 const genPlural = () => { const n = rand([{s:"apple",p:"apples"},{s:"box",p:"boxes"},{s:"dog",p:"dogs"},{s:"child",p:"children"}]); const num = Math.floor(Math.random()*3)+2; return { type: "choice", en: `I have ${num} ___.`, choices: [n.p, n.s, n.s+"s", n.p+"s"], correctAnswerText: n.p, explainJP: "2つ以上のときは、複数形(sやesがつく形)にします。", speak: `I have ${num} ${n.p}.`, jp: `私は${num}個の${n.s.replace('apple','リンゴ').replace('box','箱').replace('dog','犬').replace('child','子供')}を持っています。` }; };
 const genProgressive = () => { const subj = rand(ALL_SUBJECTS); const act = rand([{ing:"playing",jp:"しています"},{ing:"eating",jp:"食べています"},{ing:"reading",jp:"読んでいます"}]); const be = (subj === "I") ? "am" : (SINGULAR_SUBJECTS.includes(subj) ? "is" : "are"); return { type: "choice", en: `${subj} ${be} ___ now.`, choices: [act.ing, act.ing.replace('ing',''), "play", "eat"], correctAnswerText: act.ing, explainJP: "「今〜しています」は、be動詞 + ing の形です。", speak: `${subj} ${be} ${act.ing} now.`, jp: `${getJPSubj(subj)} 今 〜${act.jp}。` }; };
 const genThere = () => { const type = rand(['aff', 'neg', 'q', 'past']); let en, correct, choices, jp, explain; const isSin = Math.random() < 0.5; const noun = isSin ? "an apple" : "two apples"; if (type === 'q') { correct = isSin ? "Is" : "Are"; en = `___ there ${noun}?`; choices = ["Is", "Are", "Do", "Does"]; jp = `${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}ありますか？`; explain = "質問するときは、Is か Are を前に出します。"; } else if (type === 'neg') { correct = "not"; en = `There is ___ ${noun.replace('two','any')}.`; choices = ["not", "no", "is", "are"]; jp = `${noun.replace('an apple','リンゴが').replace('two apples','リンゴが')}ありません。`; explain = "「ありません」は is not を使います。"; } else if (type === 'past') { correct = isSin ? "was" : "were"; en = `There ___ ${noun} yesterday.`; choices = ["was", "were", "is", "are"]; jp = `昨日、${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}ありました。`; explain = "昔のことは、is→was、are→were に変えます。"; } else { correct = isSin ? "is" : "are"; en = `There ___ ${noun}.`; choices = ["is", "are", "have", "am"]; jp = `${noun.replace('an apple','リンゴが1つ').replace('two apples','リンゴが2つ')}あります。`; explain = "1つならis、2つ以上ならareを使います。"; } return { type: "choice", en, choices, correctAnswerText: correct, explainJP: explain, speak: en.replace('___', correct), jp }; };
 const genDemo = () => { const type = rand(['std', 'q', 'adj']); const isPlural = Math.random() < 0.5; const isNear = Math.random() < 0.5; const noun = isPlural ? "books" : "book"; const be = isPlural ? "are" : "is"; let correct, en, choices, jp, explain; if (type === 'adj') { const adj = "red"; correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `___ ${noun} ${be} ${adj}.`; choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}は赤い本です。`; explain = "「赤い本」などの説明がついても、基本は同じです。"; } else if (type === 'q') { correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `${isPlural?'Are':'Is'} ___ your ${noun}?`; choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}はあなたの本ですか？`; explain = "質問文でも、これ(This/These)とあれ(That/Those)の使い分けは同じです。"; } else { correct = isPlural ? (isNear?"These":"Those") : (isNear?"This":"That"); en = `___ ${be} a ${noun}.`.replace('a books', 'books'); choices = ["This", "That", "These", "Those"]; jp = `${isNear?'これ':'あれ'}${isPlural?'ら':''}は本です。`; explain = "これ(This/These) と あれ(That/Those)。数をよく見てね。"; } return { type: "choice", en, choices, correctAnswerText: correct, explainJP: explain, speak: en.replace('___', correct), jp }; };
+
+// --- 追加: Be動詞 + 一般動詞 まとめ ---
+const genTotalMaster = () => rand([genBeVerbPresent, genBeVerbPast, genBeQuestion, genVerbPresent, genVerbPast, genVerbIrregular, genVerbQuestion, genDidQuestion])();
 
 const LESSON_GROUPS = [
     { id: "be_group", name: "Be動詞", bg: "bg-pink-50", border: "border-pink-300", text: "text-pink-800", icon: "🌸" },
@@ -420,11 +565,16 @@ const LESSONS = [
   { id: "verb-irregular", groupId: "verb_group", hintId: "hint_verb_irregular", name: "一般動詞 (不規則)", generator: genVerbIrregular, icon: "🔥" },
   { id: "verb-question", groupId: "verb_group", hintId: "hint_verb_present", name: "一般動詞 (疑問)", generator: genVerbQuestion, icon: "❓" },
   { id: "verb-did", groupId: "verb_group", hintId: "hint_verb_past", name: "Didの文", generator: genDidQuestion, icon: "🔙" },
-  { id: "verb-master", groupId: "verb_group", hintId: "hint_verb_present", name: "一般動詞 まとめ", generator: genVerbMaster, icon: "👑" },
+  // 修正: ヒントIDを変更
+  { id: "verb-master", groupId: "verb_group", hintId: "hint_verb_summary", name: "一般動詞 まとめ", generator: genVerbMaster, icon: "👑" },
   { id: "can", groupId: "grammar_group", hintId: "hint_can", name: "助動詞 Can", generator: genCan, icon: "💪" },
   { id: "aux-mix", groupId: "grammar_group", hintId: "hint_can", name: "助動詞 ミックス", generator: genAuxMix, icon: "🦸" },
   { id: "wh", groupId: "grammar_group", hintId: "hint_wh", name: "疑問詞 (Wh)", generator: genWh, icon: "🕵️" },
   { id: "preposition", groupId: "grammar_group", hintId: "hint_preposition", name: "前置詞 (場所)", generator: genPreposition, icon: "📦" },
+  { id: "time_preposition", groupId: "grammar_group", hintId: "hint_time_prep", name: "前置詞 (時間)", generator: genTimePreposition, icon: "⏰" },
+  
+  // 修正: タイトルとヒントIDを変更
+  { id: "total_master", groupId: "advance_group", hintId: "hint_total_summary", name: "総復習 (Be動詞と一般動詞)", generator: genTotalMaster, icon: "🏆" },
   { id: "progressive", groupId: "advance_group", hintId: "hint_progressive", name: "進行形 (ing)", generator: genProgressive, icon: "🏃" },
   { id: "plural", groupId: "advance_group", hintId: "hint_plural", name: "複数形 (s/es)", generator: genPlural, icon: "🍎" },
   { id: "there", groupId: "advance_group", hintId: "hint_there", name: "There is 構文", generator: genThere, icon: "👉" },
